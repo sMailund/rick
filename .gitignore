@@ -1,3 +1,8 @@
-go_build_github_com_sMailund_spfy
+# Ignore all
+*
+# Unignore all with extensions
+!*.*
+# Unignore all dirs
+!*/
+
 stuff.md
-spfy
