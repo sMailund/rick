@@ -22,32 +22,27 @@ var client *spotify.Client
 var playerState *spotify.PlayerState
 
 func Authenticate() {
-
 	http.HandleFunc("/callback", completeAuth)
+	go http.ListenAndServe(":8080", nil)
 
-	go func() {
-		url := auth.AuthURL(state)
-		fmt.Println("Please log in to Spotify by visiting the following page in your browser:", url)
+	url := auth.AuthURL(state)
+	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", url)
 
-		// wait for auth to complete
-		client = <-ch
+	// wait for auth to complete
+	client = <-ch
 
-		// use the client to make calls that require authorization
-		user, err := client.CurrentUser()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("You are logged in as:", user.ID)
+	// use the client to make calls that require authorization
+	user, err := client.CurrentUser()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("You are logged in as:", user.ID)
 
-		playerState, err = client.PlayerState()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("Found your %s (%s)\n", playerState.Device.Type, playerState.Device.Name)
-	}()
-
-	http.ListenAndServe(":8080", nil)
-
+	playerState, err = client.PlayerState()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Found your %s (%s)\n", playerState.Device.Type, playerState.Device.Name)
 }
 
 func completeAuth(w http.ResponseWriter, r *http.Request) {
