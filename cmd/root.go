@@ -31,7 +31,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "spfy",
 	Short: "Spotify for the terminal",
-	Long: `spfy is a CLI tool for controlling Spotify from the terminal`,
+	Long:  `spfy is a CLI tool for controlling Spotify from the terminal`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },

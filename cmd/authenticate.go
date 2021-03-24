@@ -1,13 +1,13 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"encoding/json"
 )
 
 // redirectURI is the OAuth redirect URI for the application.
