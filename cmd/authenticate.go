@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 // redirectURI is the OAuth redirect URI for the application.
@@ -75,6 +76,25 @@ func check(e error) {
 func persistToken(token oauth2.Token) {
 	tokenJSON, err := json.Marshal(token)
 	check(err)
-	err = ioutil.WriteFile(GetTokenFile(), tokenJSON, 0644)
+	err = ioutil.WriteFile(TokenFileLocation(), tokenJSON, 0644)
 	check(err)
+}
+
+func getAuthenticatedClient() spotify.Client {
+	tokenfile, err := os.Open(TokenFileLocation())
+	if os.IsNotExist(err) {
+		fmt.Println("Could not find token file, sending to authentication...")
+		Authenticate()
+		return getAuthenticatedClient()
+	} else if err != nil {
+		panic(err)
+	}
+	defer tokenfile.Close()
+
+	byteValue, _ := ioutil.ReadAll(tokenfile)
+	var token oauth2.Token
+	err = json.Unmarshal(byteValue, &token)
+	check(err)
+
+	return auth.NewClient(&token)
 }

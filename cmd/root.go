@@ -66,7 +66,7 @@ func getSpfyDir() string {
 	return fmt.Sprintf("%v/.spfy", homeDirectory)
 }
 
-func GetTokenFile() string {
+func TokenFileLocation() string {
 	return fmt.Sprintf("%v/token.json", getSpfyDir())
 }
 
