@@ -17,11 +17,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
+	"log"
+	"os"
+	"os/user"
 )
 
 var cfgFile string
@@ -56,8 +57,31 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
+func getSpfyDir() string {
+	curUser, err := user.Current()
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	homeDirectory := curUser.HomeDir
+	return fmt.Sprintf("%v/.spfy", homeDirectory)
+}
+
+func GetTokenFile() string {
+	return fmt.Sprintf("%v/token.json", getSpfyDir())
+}
+
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	spfydir := getSpfyDir() // TODO maybe it's better to use viper for this?
+
+	if _, err := os.Stat(spfydir); os.IsNotExist(err) {
+		fmt.Println("Setting up necessary file structure...")
+		if err := os.Mkdir(spfydir, 0755); err != nil {
+			fmt.Println("could not set up necessary files to run project, panicking")
+			panic(err)
+		}
+	}
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)

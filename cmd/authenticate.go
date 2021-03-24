@@ -3,8 +3,11 @@ package cmd
 import (
 	"fmt"
 	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"encoding/json"
 )
 
 // redirectURI is the OAuth redirect URI for the application.
@@ -55,9 +58,23 @@ func completeAuth(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		log.Fatalf("State mismatch: %s != %s\n", st, state)
 	}
+	persistToken(*tok)
 	// use the token to get an authenticated client
 	client := auth.NewClient(tok)
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, "Login Completed!")
 	ch <- &client
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
+
+func persistToken(token oauth2.Token) {
+	tokenJSON, err := json.Marshal(token)
+	check(err)
+	err = ioutil.WriteFile(GetTokenFile(), tokenJSON, 0644)
+	check(err)
 }

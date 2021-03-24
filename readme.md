@@ -17,5 +17,6 @@ This is only a temporary measure until PKCE authentication is implemented, shoul
 
 ## TODO
 * proof-of-concept search and play flow
-* PCKE authentication
+* authentication
+* handle config files with viper?
 
