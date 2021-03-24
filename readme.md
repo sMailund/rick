@@ -9,6 +9,11 @@
 &nbsp;&nbsp;&nbsp;&nbsp;a useful go-based Spotify CLI.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;`> spfy search -s "never gonna give you up"`
 
+## about
+Spiffy provides a command line interface for controlling Spotify without having to open the window.
+
+Project is still WIP and lacking core functionality, use at your own risk.
+
 ## setup
 In the current version, environment variables `SPOTIFY_ID` and `SPOTIFY_SECRET` must be set, can be found in the spotify developer section.
 Additionally, the project must be setup with `http://localhost:8080/callback` as a callback URL.

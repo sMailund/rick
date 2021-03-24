@@ -30,7 +30,7 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "spfy",
-	Short: "Spotify for the terminal",
+	Short: "spotify for the terminal",
 	Long:  `spfy is a CLI tool for controlling Spotify from the terminal`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
