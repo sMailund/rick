@@ -67,12 +67,6 @@ func completeAuth(w http.ResponseWriter, r *http.Request) {
 	ch <- &client
 }
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 func persistToken(token oauth2.Token) {
 	tokenJSON, err := json.Marshal(token)
 	check(err)
@@ -97,4 +91,24 @@ func getAuthenticatedClient() spotify.Client {
 	check(err)
 
 	return auth.NewClient(&token)
+}
+
+func getAuthenticatedClientWithRetry() spotify.Client {
+	client := getAuthenticatedClient()
+
+	if _, err := client.PlayerState(); err != nil {
+		if shouldAttemptReauth(err) {
+			fmt.Printf("spotify authentication failed with status %v, attempting reauth\n", err.(spotify.Error).Status)
+			Authenticate()
+			client = getAuthenticatedClient()
+			if _, err := client.PlayerState(); err != nil {
+				log.Fatal(err)
+			} else {
+				return client
+			}
+		} else {
+			log.Fatal(err)
+		}
+	}
+	return client
 }

@@ -44,9 +44,7 @@ func init() {
 }
 
 func playCommand() {
-	client := getAuthenticatedClient()
+	client := getAuthenticatedClientWithRetry()
 	err := client.Play()
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 }

@@ -44,9 +44,7 @@ func init() {
 }
 
 func pauseCommand() {
-	client := getAuthenticatedClient()
+	client := getAuthenticatedClientWithRetry()
 	err := client.Pause()
-	if err != nil {
-		panic(err)
-	}
+	check(err)
 }
