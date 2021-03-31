@@ -5,7 +5,7 @@
 &nbsp;&nbsp;&nbsp;&nbsp;smart in appearance.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;`"a spiffy new outfit"`
 
-*noun*:<br/>
+*proper noun*:<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;a useful go-based Spotify CLI.<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;`> spfy search -s "never gonna give you up"`
 
