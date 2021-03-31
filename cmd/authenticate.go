@@ -59,7 +59,10 @@ func completeAuth(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		log.Fatalf("State mismatch: %s != %s\n", st, state)
 	}
-	persistToken(*tok)
+
+	err = persistToken(*tok)
+	check(err)
+
 	// use the token to get an authenticated client
 	client := auth.NewClient(tok)
 	w.Header().Set("Content-Type", "text/html")
@@ -67,15 +70,12 @@ func completeAuth(w http.ResponseWriter, r *http.Request) {
 	ch <- &client
 }
 
-func persistToken(token oauth2.Token) {
-	tokenJSON, err := json.Marshal(token)
-	check(err)
-	err = ioutil.WriteFile(TokenFileLocation(), tokenJSON, 0644)
-	check(err)
+func persistToken(token oauth2.Token) error {
+	return persistJSON(token, tokenFileLocation())
 }
 
 func getAuthenticatedClient() spotify.Client {
-	tokenfile, err := os.Open(TokenFileLocation())
+	tokenfile, err := os.Open(tokenFileLocation())
 	if os.IsNotExist(err) {
 		fmt.Println("Could not find token file, sending to authentication...")
 		Authenticate()

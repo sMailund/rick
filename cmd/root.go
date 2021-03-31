@@ -20,9 +20,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
 	"os"
-	"os/user"
 )
 
 var cfgFile string
@@ -55,19 +53,6 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-func getSpfyDir() string {
-	curUser, err := user.Current()
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	homeDirectory := curUser.HomeDir
-	return fmt.Sprintf("%v/.spfy", homeDirectory)
-}
-
-func TokenFileLocation() string {
-	return fmt.Sprintf("%v/token.json", getSpfyDir())
 }
 
 // initConfig reads in config file and ENV variables if set.
