@@ -1,6 +1,6 @@
 # rick
 
-Spiffy provides a command line interface for controlling Spotify without having to open the window.
+`rick` provides a command line interface for controlling Spotify without having to open the window.
 
 ## setup
 In the current version, environment variables `SPOTIFY_ID` and `SPOTIFY_SECRET` must be set, can be found in the spotify developer section.
