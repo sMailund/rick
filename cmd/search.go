@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/zmb3/spotify"
@@ -28,10 +29,7 @@ const defaultSearchType spotify.SearchType = spotify.SearchTypeTrack
 // These results are altered and simplified from the response obtained from the Spotify API,
 // in order to be easier to work with in terms of displaying and using search results.
 type SearchResults struct {
-	Tracks    []SearchResultEntry `json:"tracks"`
-	Albums    []SearchResultEntry `json:"albums"`
-	Playlists []SearchResultEntry `json:"playlists"`
-	Artists   []SearchResultEntry `json:"artists"`
+	Results    []SearchResultEntry `json:"results"`
 }
 
 // SearchResultEntry represents a single row in the search results.
@@ -90,47 +88,56 @@ func search(cmd *cobra.Command, args []string) {
 	togglePlaylist, _ := cmd.Flags().GetBool("playlist")
 	toggleArtist, _ := cmd.Flags().GetBool("artist")
 
+	toggles := []bool{toggleSong, toggleAlbum, togglePlaylist, toggleArtist}
+	err := verifyParams(toggles)
+	check(err)
+
 	searchType := constructSearchType(toggleSong, toggleAlbum, togglePlaylist, toggleArtist)
 
 	searchResults, err := client.Search(searchTerm, searchType)
 	check(err)
 
-	printable := parseResults(*searchResults)
+	parsedResults := parseResults(*searchResults, searchType)
+	printResults(parsedResults)
 
-	// TODO persist and display results
+	err = persistJSON(parsedResults, resultsFileLocation())
+	check(err)
+}
 
-	fmt.Printf("%v\n", printable)
+func verifyParams(toggles []bool) error {
+	alreadyFound := false
+
+	for _, toggle := range toggles {
+		if toggle {
+			if alreadyFound {
+				return errors.New("spfy does not support multiple search types")
+			} else {
+				alreadyFound = true
+			}
+		}
+	}
+
+	return nil
 }
 
 func constructSearchType(toggleSong bool, toggleAlbum bool, togglePlaylist bool, toggleArtist bool) spotify.SearchType {
-	var searchSong spotify.SearchType = 0
-	var searchAlbum spotify.SearchType = 0
-	var searchPlaylist spotify.SearchType = 0
-	var searchArtist spotify.SearchType = 0
-
 	if toggleSong {
-		searchSong = spotify.SearchTypeTrack
+		return spotify.SearchTypeTrack
 	}
 
 	if toggleAlbum {
-		searchAlbum = spotify.SearchTypeAlbum
+		return spotify.SearchTypeAlbum
 	}
 
 	if togglePlaylist {
-		searchPlaylist = spotify.SearchTypePlaylist
+		return spotify.SearchTypePlaylist
 	}
 
 	if toggleArtist {
-		searchArtist = spotify.SearchTypeArtist
+		return spotify.SearchTypeArtist
 	}
 
-	searchType := searchSong | searchAlbum | searchPlaylist | searchArtist
-
-	if searchType == 0 {
-		searchType = defaultSearchType
-	}
-
-	return searchType
+	return defaultSearchType
 }
 
 func extractArtistNames(artists []spotify.SimpleArtist) []string {
@@ -142,19 +149,36 @@ func extractArtistNames(artists []spotify.SimpleArtist) []string {
 	return artistNames
 }
 
-func parseResults(result spotify.SearchResult) SearchResults {
+func parseResults(result spotify.SearchResult, searchType spotify.SearchType) SearchResults {
 	parsedResults := SearchResults{}
 
-	var tracks []SearchResultEntry
-	for _, track := range result.Tracks.Tracks {
-		tracks = append(tracks, SearchResultEntry{
+	// TODO parse the rest of the types
+	switch searchType {
+	case spotify.SearchTypeTrack:
+		parsedResults.Results = parseTracks(result.Tracks)
+	}
+
+	return parsedResults
+}
+
+func parseTracks(tracks *spotify.FullTrackPage) []SearchResultEntry {
+	var parsedTracks []SearchResultEntry
+	for _, track := range tracks.Tracks {
+		parsedTracks = append(parsedTracks, SearchResultEntry{
 			DisplayNamePart1: track.Name,
 			DisplayNamePart2: extractArtistNames(track.Artists),
 			URI:              string(track.URI),
 		})
 	}
+	return parsedTracks
+}
 
-	parsedResults.Tracks = tracks
+func printResults(results SearchResults) {
+	for i, track := range results.Results {
+		fmt.Printf("%v: %v - %v\n", i + 1, track.DisplayNamePart1, formatNamePart2(track.DisplayNamePart2))
+	}
+}
 
-	return parsedResults
+func formatNamePart2(names []string) string {
+	return strings.Join(names, ", ")
 }

@@ -22,14 +22,6 @@ func Test_constructSearchType_album(t *testing.T) {
 	}
 }
 
-func Test_constructSearchType_multiple(t *testing.T) {
-	searchType := constructSearchType(false, false, true, true)
-
-	if searchType != spotify.SearchTypePlaylist|spotify.SearchTypeArtist {
-		t.Errorf("constructsearchtype is not of expected searchType artist,playlist, got %v", searchTypeString(searchType))
-	}
-}
-
 func searchTypeString(st spotify.SearchType) string {
 	types := []string{}
 	if st&spotify.SearchTypeAlbum != 0 {
@@ -46,3 +38,38 @@ func searchTypeString(st spotify.SearchType) string {
 	}
 	return strings.Join(types, ",")
 }
+
+func Test_verifyParams_none(t *testing.T) {
+	flags := []bool{false, false, false, false}
+
+	err := verifyParams(flags)
+
+	if err != nil {
+		t.Errorf("verifyParams returned unexpected error %v", err)
+	}
+}
+
+func Test_verifyParams_one(t *testing.T) {
+	flags := []bool{false, true, false, false}
+
+	err := verifyParams(flags)
+
+	if err != nil {
+		t.Errorf("verifyParams returned unexpected error %v", err)
+	}
+}
+
+func Test_verifyParams_multiple(t *testing.T) {
+	flags := []bool{false, true, true, false}
+
+	err := verifyParams(flags)
+
+	if err == nil {
+		t.Errorf("verifyParams did not return expected error")
+	}
+}
+
+func Test_parseResults(t *testing.T) {
+
+}
+
