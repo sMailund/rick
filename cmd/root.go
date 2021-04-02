@@ -27,9 +27,9 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "spfy",
+	Use:   "rick",
 	Short: "spotify for the terminal",
-	Long:  `spfy is a CLI tool for controlling Spotify from the terminal`,
+	Long:  `rick is a CLI tool for controlling Spotify from the terminal`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -48,7 +48,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.spfy.yaml)")
+	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.rick.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -57,11 +57,11 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	spfydir := getSpfyDir() // TODO maybe it's better to use viper for this?
+	appdir := getApplicationDir() // TODO maybe it's better to use viper for this?
 
-	if _, err := os.Stat(spfydir); os.IsNotExist(err) {
+	if _, err := os.Stat(appdir); os.IsNotExist(err) {
 		fmt.Println("Setting up necessary file structure...")
-		if err := os.Mkdir(spfydir, 0755); err != nil {
+		if err := os.Mkdir(appdir, 0755); err != nil {
 			fmt.Println("could not set up necessary files to run project, panicking")
 			panic(err)
 		}
@@ -75,9 +75,9 @@ func initConfig() {
 		home, err := homedir.Dir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".spfy" (without extension).
+		// Search config in home directory with name ".rick" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".spfy")
+		viper.SetConfigName(".rick")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

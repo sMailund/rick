@@ -110,7 +110,7 @@ func verifyParams(toggles []bool) error {
 	for _, toggle := range toggles {
 		if toggle {
 			if alreadyFound {
-				return errors.New("spfy does not support multiple search types")
+				return errors.New("rick does not support multiple search types")
 			} else {
 				alreadyFound = true
 			}

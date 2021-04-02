@@ -1,4 +1,4 @@
-module github.com/sMailund/spfy
+module github.com/sMailund/rick
 
 go 1.16
 

@@ -9,13 +9,13 @@ import (
 	"os/user"
 )
 
-func getSpfyDir() string {
+func getApplicationDir() string {
 	curUser, err := user.Current()
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	homeDirectory := curUser.HomeDir
-	return fmt.Sprintf("%v/.spfy", homeDirectory)
+	return fmt.Sprintf("%v/.rick", homeDirectory)
 }
 
 func persistJSON(unmarshalledJSON interface{}, location string) error {
@@ -27,11 +27,11 @@ func persistJSON(unmarshalledJSON interface{}, location string) error {
 }
 
 func tokenFileLocation() string {
-	return fmt.Sprintf("%v/token.json", getSpfyDir())
+	return fmt.Sprintf("%v/token.json", getApplicationDir())
 }
 
 func resultsFileLocation() string {
-	return fmt.Sprintf("%v/results.json", getSpfyDir())
+	return fmt.Sprintf("%v/results.json", getApplicationDir())
 }
 
 func persistSearchResults(results SearchResults) error {

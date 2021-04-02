@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/sMailund/spfy/cmd"
+import "github.com/sMailund/rick/cmd"
 
 func main() {
 	cmd.Execute()
