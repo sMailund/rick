@@ -100,7 +100,7 @@ func search(cmd *cobra.Command, args []string) {
 	parsedResults := parseResults(*searchResults, searchType)
 	printResults(parsedResults)
 
-	err = persistJSON(parsedResults, resultsFileLocation())
+	err = persistSearchResults(parsedResults)
 	check(err)
 }
 

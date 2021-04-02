@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"os/user"
 )
 
@@ -31,4 +32,22 @@ func tokenFileLocation() string {
 
 func resultsFileLocation() string {
 	return fmt.Sprintf("%v/results.json", getSpfyDir())
+}
+
+func persistSearchResults(results SearchResults) error {
+	return persistJSON(results, resultsFileLocation())
+}
+
+func getSearchResults() (SearchResults, error) {
+	resultsFile, err := os.Open(resultsFileLocation())
+	searchResults := SearchResults{}
+	if err != nil {
+		return searchResults, err
+	}
+	defer resultsFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(resultsFile)
+	err = json.Unmarshal(byteValue, &searchResults)
+
+	return searchResults, err
 }

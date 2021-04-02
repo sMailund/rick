@@ -16,7 +16,9 @@ limitations under the License.
 package cmd
 
 import (
+	"errors"
 	"github.com/spf13/cobra"
+	"github.com/zmb3/spotify"
 )
 
 // playCmd represents the play command
@@ -25,7 +27,7 @@ var playCmd = &cobra.Command{
 	Short: "play a song",
 	Long: `play a selected song. Functions as "resume" when called without arguments`,
 	Run: func(cmd *cobra.Command, args []string) {
-		playCommand()
+		playCommand(cmd)
 	},
 }
 
@@ -41,10 +43,47 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// playCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	playCmd.Flags().IntP("result", "r", 0, "Play an entry from search results")
 }
 
-func playCommand() {
+func playCommand(cmd *cobra.Command) {
 	client := getAuthenticatedClientWithRetry()
-	err := client.Play()
+	entryToPlay, err := cmd.Flags().GetInt("result")
 	check(err)
+
+	if entryToPlay > 0 {
+		err = playEntry(client, entryToPlay)
+	} else {
+		err = play(client)
+	}
+
+	check(err)
+}
+
+func play(client spotify.Client) error {
+	return client.Play()
+}
+
+func playEntry(client spotify.Client, entry int) error {
+	opts := spotify.PlayOptions{
+		DeviceID:        nil,
+		PlaybackContext: nil,
+		URIs:            nil,
+		PlaybackOffset:  nil,
+		PositionMs:      0,
+	}
+
+	results, err := getSearchResults()
+	if err != nil {
+		return err
+	}
+
+	if entry >= len(results.Results) {
+		return errors.New("invalid results index")
+	}
+
+	uri := spotify.URI(results.Results[entry-1].URI)
+	opts.URIs = append(opts.URIs, uri)
+
+	return client.PlayOpt(&opts)
 }
