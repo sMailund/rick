@@ -140,22 +140,18 @@ func constructSearchType(toggleSong bool, toggleAlbum bool, togglePlaylist bool,
 	return defaultSearchType
 }
 
-func extractArtistNames(artists []spotify.SimpleArtist) []string {
-	artistNames := []string{}
-	for _, artist := range artists {
-		artistNames = append(artistNames, artist.Name)
-	}
-
-	return artistNames
-}
-
-func parseResults(result spotify.SearchResult, searchType spotify.SearchType) SearchResults {
+func parseResults(results spotify.SearchResult, searchType spotify.SearchType) SearchResults {
 	parsedResults := SearchResults{}
 
-	// TODO parse the rest of the types
 	switch searchType {
 	case spotify.SearchTypeTrack:
-		parsedResults.Results = parseTracks(result.Tracks)
+		parsedResults.Results = parseTracks(results.Tracks)
+	case spotify.SearchTypeAlbum:
+		parsedResults.Results = parseAlbums(results.Albums)
+	case spotify.SearchTypePlaylist:
+		parsedResults.Results = parsePlaylists(results.Playlists)
+	case spotify.SearchTypeArtist:
+		parsedResults.Results = parseArtists(*results.Artists)
 	}
 
 	return parsedResults
@@ -171,6 +167,87 @@ func parseTracks(tracks *spotify.FullTrackPage) []SearchResultEntry {
 		})
 	}
 	return parsedTracks
+}
+
+func parseAlbums(albums *spotify.SimpleAlbumPage) []SearchResultEntry {
+	var parsedAlbums []SearchResultEntry
+	for _, album := range albums.Albums {
+		parsedAlbums = append(parsedAlbums, SearchResultEntry{
+			DisplayNamePart1: album.Name,
+			DisplayNamePart2: extractArtistNames(album.Artists),
+			URI:              string(album.URI),
+		})
+	}
+	return parsedAlbums
+}
+
+func parsePlaylists(playlists *spotify.SimplePlaylistPage) []SearchResultEntry {
+	var parsedPlaylists []SearchResultEntry
+	for _, playlist := range playlists.Playlists {
+		parsedPlaylists = append(parsedPlaylists, SearchResultEntry{
+			DisplayNamePart1: playlist.Name,
+			DisplayNamePart2: extractPlaylistTracks(playlist.ID),
+			URI:              string(playlist.URI),
+		})
+	}
+	return parsedPlaylists
+}
+
+func parseArtists(artists spotify.FullArtistPage) []SearchResultEntry {
+	var parsedArtists []SearchResultEntry
+	for _, artist := range artists.Artists {
+		parsedArtists = append(parsedArtists, SearchResultEntry{
+			DisplayNamePart1: artist.Name,
+			DisplayNamePart2: extractArtistsTracks(artist.ID),
+			URI:              string(artist.URI),
+		})
+	}
+	return parsedArtists
+
+}
+
+func extractArtistNames(artists []spotify.SimpleArtist) []string {
+	artistNames := []string{}
+	for _, artist := range artists {
+		artistNames = append(artistNames, artist.Name)
+	}
+
+	return artistNames
+}
+
+func extractArtistsTracks(artistId spotify.ID) []string {
+	client := getAuthenticatedClientWithRetry()
+	// use US top tracks for laziness, not too important to choose the correct location
+	artistsTopTracks, err := client.GetArtistsTopTracks(artistId, "US")
+
+	if err != nil {
+		// trouble fetching title of songs in playlist, better to display without playlist contents instead of crashing
+		return []string{""}
+	}
+
+	artistNames := []string{}
+	for _, track := range artistsTopTracks {
+		artistNames = append(artistNames, track.Name)
+	}
+
+	return artistNames
+}
+
+func extractPlaylistTracks(playlistId spotify.ID) []string {
+	client := getAuthenticatedClientWithRetry()
+	playlistTracks, err := client.GetPlaylistTracks(playlistId)
+
+	if err != nil {
+		// trouble fetching title of songs in playlist, better to display without playlist contents instead of crashing
+		return []string{""}
+	}
+
+	artistNames := []string{}
+	for _, track := range playlistTracks.Tracks {
+		artistNames = append(artistNames, track.Track.Name)
+	}
+
+	return artistNames
 }
 
 func printResults(results SearchResults) {
