@@ -22,7 +22,7 @@ var (
 	state = "abc123"
 )
 
-var client *spotify.Client
+var client *spotify.Client // TODO, hide from outer scope
 var playerState *spotify.PlayerState
 
 func Authenticate() {

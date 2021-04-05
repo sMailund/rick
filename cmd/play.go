@@ -19,6 +19,7 @@ import (
 	"errors"
 	"github.com/spf13/cobra"
 	"github.com/zmb3/spotify"
+	"log"
 )
 
 // playCmd represents the play command
@@ -82,8 +83,71 @@ func playEntry(client spotify.Client, entry int) error {
 		return errors.New("invalid results index")
 	}
 
-	uri := spotify.URI(results.Results[entry-1].URI)
-	opts.URIs = append(opts.URIs, uri)
+	selectedEntry := results.Results[entry - 1]
+
+	uris, err := getUris(selectedEntry, results.Type, client)
+	if err != nil {
+		log.Fatalf("Failed at fetching associated tracks: %v\n", err)
+	}
+
+	opts.URIs = uris
 
 	return client.PlayOpt(&opts)
+}
+
+func getUris(entry SearchResultEntry, resultType ResultType, client spotify.Client) ([]spotify.URI, error) {
+	uris := []spotify.URI{}
+	var err error
+
+	switch resultType {
+	case TRACKRESULTS:
+		return []spotify.URI{entry.URI}, nil
+	case PLAYLISTRESULTS: // TODO: this whole section can probably be more generalizable
+		playlistTracks, err := client.GetPlaylistTracks(entry.ID)
+		if err != nil {
+			return []spotify.URI{}, err
+		} else {
+			return getPlaylistTrackUris(*playlistTracks), nil
+		}
+	case ARTISTRESULTS:
+		artistTracks, err := client.GetArtistsTopTracks(entry.ID, defaultLocation)
+		if err != nil {
+			return []spotify.URI{}, err
+		} else {
+			return getTrackUrisFullTrack(artistTracks), nil
+		}
+	case ALBUMRESULTS:
+		albumTracks, err := client.GetAlbumTracks(entry.ID)
+		if err != nil {
+			return []spotify.URI{}, err
+		} else {
+			return getTrackUrisSimpleTrack(albumTracks.Tracks), nil
+		}
+	}
+
+	return uris, err
+}
+
+func getPlaylistTrackUris(playlist spotify.PlaylistTrackPage) []spotify.URI {
+	uris := []spotify.URI{}
+	for _, track := range playlist.Tracks {
+		uris = append(uris, track.Track.URI)
+	}
+	return uris
+}
+
+func getTrackUrisFullTrack(artistTracks []spotify.FullTrack) []spotify.URI {
+	uris := []spotify.URI{}
+	for _, track := range artistTracks{
+		uris = append(uris, track.URI)
+	}
+	return uris
+}
+
+func getTrackUrisSimpleTrack(artistTracks []spotify.SimpleTrack) []spotify.URI {
+	uris := []spotify.URI{}
+	for _, track := range artistTracks{
+		uris = append(uris, track.URI)
+	}
+	return uris
 }

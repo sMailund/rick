@@ -24,12 +24,24 @@ import (
 )
 
 const defaultSearchType spotify.SearchType = spotify.SearchTypeTrack
+const defaultLocation = "US"
+
+// used for differentiating between different types of results when working with results JSON
+type ResultType int
+
+const (
+	TRACKRESULTS ResultType = iota
+	ALBUMRESULTS
+	PLAYLISTRESULTS
+	ARTISTRESULTS
+)
 
 // SearchResults represents the a collection of search results obtained from a single search through the  search functionality.
 // These results are altered and simplified from the response obtained from the Spotify API,
 // in order to be easier to work with in terms of displaying and using search results.
 type SearchResults struct {
-	Results    []SearchResultEntry `json:"results"`
+	Results []SearchResultEntry `json:"results"`
+	Type    ResultType
 }
 
 // SearchResultEntry represents a single row in the search results.
@@ -46,7 +58,10 @@ type SearchResultEntry struct {
 
 	// URI is the spotify-specific resource identifier.
 	// These are used in communication with the API, such as specifying the song to play.
-	URI string `json:"uri"`
+	URI spotify.URI `json:"uri"`
+
+	// ID is an additional spotify-specific identifier, used in the API for additional lookups
+	ID spotify.ID `json:"id"`
 }
 
 // searchCmd represents the search command
@@ -146,12 +161,16 @@ func parseResults(results spotify.SearchResult, searchType spotify.SearchType) S
 	switch searchType {
 	case spotify.SearchTypeTrack:
 		parsedResults.Results = parseTracks(results.Tracks)
+		parsedResults.Type = TRACKRESULTS
 	case spotify.SearchTypeAlbum:
 		parsedResults.Results = parseAlbums(results.Albums)
+		parsedResults.Type = ALBUMRESULTS
 	case spotify.SearchTypePlaylist:
 		parsedResults.Results = parsePlaylists(results.Playlists)
+		parsedResults.Type = PLAYLISTRESULTS
 	case spotify.SearchTypeArtist:
 		parsedResults.Results = parseArtists(*results.Artists)
+		parsedResults.Type = ARTISTRESULTS
 	}
 
 	return parsedResults
@@ -163,9 +182,11 @@ func parseTracks(tracks *spotify.FullTrackPage) []SearchResultEntry {
 		parsedTracks = append(parsedTracks, SearchResultEntry{
 			DisplayNamePart1: track.Name,
 			DisplayNamePart2: extractArtistNames(track.Artists),
-			URI:              string(track.URI),
+			URI:              track.URI,
+			ID:               track.ID,
 		})
 	}
+
 	return parsedTracks
 }
 
@@ -175,7 +196,8 @@ func parseAlbums(albums *spotify.SimpleAlbumPage) []SearchResultEntry {
 		parsedAlbums = append(parsedAlbums, SearchResultEntry{
 			DisplayNamePart1: album.Name,
 			DisplayNamePart2: extractArtistNames(album.Artists),
-			URI:              string(album.URI),
+			URI:              album.URI,
+			ID:               album.ID,
 		})
 	}
 	return parsedAlbums
@@ -187,7 +209,8 @@ func parsePlaylists(playlists *spotify.SimplePlaylistPage) []SearchResultEntry {
 		parsedPlaylists = append(parsedPlaylists, SearchResultEntry{
 			DisplayNamePart1: playlist.Name,
 			DisplayNamePart2: extractPlaylistTracks(playlist.ID),
-			URI:              string(playlist.URI),
+			URI:              playlist.URI,
+			ID:               playlist.ID,
 		})
 	}
 	return parsedPlaylists
@@ -199,7 +222,8 @@ func parseArtists(artists spotify.FullArtistPage) []SearchResultEntry {
 		parsedArtists = append(parsedArtists, SearchResultEntry{
 			DisplayNamePart1: artist.Name,
 			DisplayNamePart2: extractArtistsTracks(artist.ID),
-			URI:              string(artist.URI),
+			URI:              artist.URI,
+			ID:               artist.ID,
 		})
 	}
 	return parsedArtists
@@ -218,7 +242,7 @@ func extractArtistNames(artists []spotify.SimpleArtist) []string {
 func extractArtistsTracks(artistId spotify.ID) []string {
 	client := getAuthenticatedClientWithRetry()
 	// use US top tracks for laziness, not too important to choose the correct location
-	artistsTopTracks, err := client.GetArtistsTopTracks(artistId, "US")
+	artistsTopTracks, err := client.GetArtistsTopTracks(artistId, defaultLocation)
 
 	if err != nil {
 		// trouble fetching title of songs in playlist, better to display without playlist contents instead of crashing
@@ -252,7 +276,7 @@ func extractPlaylistTracks(playlistId spotify.ID) []string {
 
 func printResults(results SearchResults) {
 	for i, track := range results.Results {
-		fmt.Printf("%v: %v - %v\n", i + 1, track.DisplayNamePart1, formatNamePart2(track.DisplayNamePart2))
+		fmt.Printf("%v: %v - %v\n", i+1, track.DisplayNamePart1, formatNamePart2(track.DisplayNamePart2))
 	}
 }
 
