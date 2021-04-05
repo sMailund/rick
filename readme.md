@@ -1,5 +1,8 @@
 # rick
 
+*The Spotify CLI that's never going to give you up, and never going to let you down*
+
+## about
 `rick` provides a command line interface for controlling Spotify without having to open the window.
 
 ## build from source
