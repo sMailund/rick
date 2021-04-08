@@ -281,5 +281,8 @@ func printResults(results SearchResults) {
 }
 
 func formatNamePart2(names []string) string {
+	if len(names) == 0 {
+		return "n/a"
+	}
 	return strings.Join(names, ", ")
 }
