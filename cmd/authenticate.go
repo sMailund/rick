@@ -22,7 +22,7 @@ var (
 	state = "abc123"
 )
 
-var client *spotify.Client // TODO, hide from outer scope
+var spotifyClientContainer *spotify.Client // TODO, hide from outer scope
 var playerState *spotify.PlayerState
 
 func Authenticate() {
@@ -33,16 +33,16 @@ func Authenticate() {
 	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", url)
 
 	// wait for auth to complete
-	client = <-ch
+	spotifyClientContainer = <-ch
 
-	// use the client to make calls that require authorization
-	user, err := client.CurrentUser()
+	// use the spotifyClientContainer to make calls that require authorization
+	user, err := spotifyClientContainer.CurrentUser()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("You are logged in as:", user.ID)
 
-	playerState, err = client.PlayerState()
+	playerState, err = spotifyClientContainer.PlayerState()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -63,7 +63,7 @@ func completeAuth(w http.ResponseWriter, r *http.Request) {
 	err = persistToken(*tok)
 	check(err)
 
-	// use the token to get an authenticated client
+	// use the token to get an authenticated spotifyClientContainer
 	client := auth.NewClient(tok)
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, "Login Completed!")
