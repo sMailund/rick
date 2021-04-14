@@ -3,13 +3,13 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	pkce "github.com/nirasan/go-oauth-pkce-code-verifier"
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	pkce "github.com/nirasan/go-oauth-pkce-code-verifier"
 )
 
 // redirectURI is the OAuth redirect URI for the application.

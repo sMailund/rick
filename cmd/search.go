@@ -91,6 +91,7 @@ func init() {
 	searchCmd.Flags().BoolP("album", "a", false, "Toggle album search")
 	searchCmd.Flags().BoolP("playlist", "p", false, "Toggle playlist search")
 	searchCmd.Flags().BoolP("artist", "r", false, "Toggle artist search")
+	searchCmd.Flags().IntP("limit", "l", 5, "Limit number of search results")
 }
 
 func search(cmd *cobra.Command, args []string) {
@@ -102,6 +103,7 @@ func search(cmd *cobra.Command, args []string) {
 	toggleAlbum, _ := cmd.Flags().GetBool("album")
 	togglePlaylist, _ := cmd.Flags().GetBool("playlist")
 	toggleArtist, _ := cmd.Flags().GetBool("artist")
+	limit, _ := cmd.Flags().GetInt("limit")
 
 	toggles := []bool{toggleSong, toggleAlbum, togglePlaylist, toggleArtist}
 	err := verifyParams(toggles)
@@ -109,7 +111,10 @@ func search(cmd *cobra.Command, args []string) {
 
 	searchType := constructSearchType(toggleSong, toggleAlbum, togglePlaylist, toggleArtist)
 
-	searchResults, err := client.Search(searchTerm, searchType)
+	opts := spotify.Options{
+		Limit: &limit,
+	}
+	searchResults, err := client.SearchOpt(searchTerm, searchType, &opts)
 	check(err)
 
 	parsedResults := parseResults(*searchResults, searchType)
