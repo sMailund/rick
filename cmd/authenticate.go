@@ -25,6 +25,7 @@ var (
 )
 
 func Authenticate() {
+	auth.SetAuthInfo("82821ba7ac914a8d9e1c3d4a4ef2f4d4", "")
 	v, err := pkce.CreateCodeVerifier()
 	if err != nil {
 		log.Fatalf("could not create code challenge: %v\n", err)
