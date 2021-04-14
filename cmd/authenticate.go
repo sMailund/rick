@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	pkce "github.com/nirasan/go-oauth-pkce-code-verifier"
 )
 
 // redirectURI is the OAuth redirect URI for the application.
@@ -20,29 +21,36 @@ var (
 	auth  = spotify.NewAuthenticator(redirectURI, spotify.ScopeUserReadCurrentlyPlaying, spotify.ScopeUserReadPlaybackState, spotify.ScopeUserModifyPlaybackState)
 	ch    = make(chan *spotify.Client)
 	state = "abc123"
+	codeVerifier *pkce.CodeVerifier
 )
 
-var spotifyClientContainer *spotify.Client // TODO, hide from outer scope
-var playerState *spotify.PlayerState
-
 func Authenticate() {
+	v, err := pkce.CreateCodeVerifier()
+	if err != nil {
+		log.Fatalf("could not create code challenge: %v\n", err)
+	}
+	codeVerifier = v
+
 	http.HandleFunc("/callback", completeAuth)
 	go http.ListenAndServe(":8080", nil)
 
-	url := auth.AuthURL(state)
+	url := auth.AuthURLWithOpts(state,
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oauth2.SetAuthURLParam("code_challenge", v.CodeChallengeS256()),
+	)
 	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", url)
 
 	// wait for auth to complete
-	spotifyClientContainer = <-ch
+	client := <-ch
 
-	// use the spotifyClientContainer to make calls that require authorization
-	user, err := spotifyClientContainer.CurrentUser()
+	// use the client to make calls that require authorization
+	user, err := client.CurrentUser()
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("You are logged in as:", user.ID)
 
-	playerState, err = spotifyClientContainer.PlayerState()
+	playerState, err := client.PlayerState()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +58,8 @@ func Authenticate() {
 }
 
 func completeAuth(w http.ResponseWriter, r *http.Request) {
-	tok, err := auth.Token(state, r)
+	tok, err := auth.TokenWithOpts(state, r,
+		oauth2.SetAuthURLParam("code_verifier", codeVerifier.String()))
 	if err != nil {
 		http.Error(w, "Couldn't get token", http.StatusForbidden)
 		log.Fatal(err)
